@@ -69,4 +69,67 @@ class Arena
     {
         return $this->size;
     }
+
+    public function move(Fighter $fighter, string $direction):void
+    {
+        $x = $fighter->getX();
+        $y = $fighter->getY();
+
+        switch($direction){
+            case "N" :
+                $y++;
+                break;
+            case "S" :
+                $y--;
+                break;
+            case "E" :
+                $x++;
+                break;
+            case "W" :
+                $x--;
+                break;
+            default ;
+        }
+
+        if($y > -1 && $y < $this->getSize() && $x > -1 && $x < $this->getSize()){
+            foreach($this->getMonsters() as $monster){
+                if($x === $monster->getX() && $y === $monster->getY()){
+                    throw new Exception("This place has already been taken");
+                }
+            }
+        }else{
+            throw new Exception("You're about to leave Arena!");
+        }
+
+        $fighter->setX($x);
+        $fighter->setY($y);
+
+    }
+
+    public function battle(int $id)
+    {
+        $monsters = $this->getMonsters();
+        $monsterTargeted = $monsters[$id];
+
+        if($this->touchable($this->hero, $monsterTargeted)){
+            $this->hero->fight($monsterTargeted);
+            if(!$monsterTargeted->isAlive()){
+                $xpWon = $monsterTargeted->getExperience();
+                $this->hero->setExperience($this->hero->getExperience() + $xpWon);
+                unset($monsters[$id]);
+                $this->setMonsters($monsters);
+            }
+        } else{
+            throw new Exception("Too far");
+        }
+
+
+        if($monsterTargeted->isAlive()){
+            if($this->touchable($monsterTargeted, $this->hero)){
+                $monsterTargeted->fight($this->hero);
+            } else{
+                throw new Exception("Your enemy is too far to reach you");
+            }
+        }
+    }
 }
